@@ -380,7 +380,8 @@ impl D64 {
             for i in (0..256).step_by(32) {
                 if data[i + 2] != 0 && data[i + 2] & 0x07 != 0 {
                     let name = petscii_to_ascii(&data[i + 5..i + 21]);
-                    if name.trim() == filename {
+                    let trimmed = name.trim().trim_end_matches('?');
+                    if trimmed == filename {
                         return Ok((data[i + 3], data[i + 4]));
                     }
                 }

@@ -4,7 +4,7 @@
 // Author: Volker Schwaberow <volker@schwaberow.de>
 // Copyright (c) 2024 Volker Schwaberow
 
-use std::{fs::File, io::Write};
+use std::{fs, fs::File, io::Write};
 
 use clap::{Parser, Subcommand};
 use d64lib::{D64Error, D64};
@@ -80,6 +80,14 @@ enum Commands {
     List {
         #[arg(short, long)]
         file: String,
+    },
+    Insert {
+        #[arg(short, long)]
+        file: String,
+        #[arg(short = 'n', long)]
+        filename: String,
+        #[arg(short, long)]
+        input: String,
     },
     Extract {
         #[arg(short, long)]
@@ -241,6 +249,17 @@ fn main() -> Result<(), D64Error> {
                 }
                 Err(e) => println!("Error listing files: {}", e),
             }
+        }
+        Commands::Insert {
+            file,
+            filename,
+            input,
+        } => {
+            let mut d64 = D64::from_file(file)?;
+            let bytes = fs::read(input)?;
+            let content = d64.insert_file(filename, &bytes)?;
+            d64.save_to_file(file)?;
+            println!("File '{}' inserted to '{}'", input, filename);
         }
         Commands::Extract {
             file,
