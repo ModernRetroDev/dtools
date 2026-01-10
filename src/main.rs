@@ -97,6 +97,14 @@ enum Commands {
         #[arg(short, long)]
         output: String,
     },
+    ExtractText {
+        #[arg(short, long)]
+        file: String,
+        #[arg(short = 'n', long)]
+        filename: String,
+        #[arg(short, long)]
+        output: String,
+    },
     Create {
         #[arg(short, long)]
         file: String,
@@ -270,6 +278,39 @@ fn main() -> Result<(), D64Error> {
             let content = d64.extract_file(filename)?;
             let mut output_file = File::create(output)?;
             output_file.write_all(&content)?;
+            println!("File '{}' extracted to '{}'", filename, output);
+        }
+        Commands::ExtractText {
+            file,
+            filename,
+            output,
+        } => {
+            let d64 = D64::from_file(file)?;
+            let content = d64.extract_file(filename)?;
+            let mut content_str: String = "".to_string();
+            for b in content.iter() {
+                if *b == 0 {
+                    break
+                }
+
+                let res: u8;
+                if 0x41 <= *b && *b < 0x5B {
+                    res = *b + 0x20;
+                } else if 0x61 <= *b && *b < 0x7B {
+                    res = *b - 0x20;
+                } else {
+                    res = *b;
+                }
+
+                let c = res as char;
+
+                content_str.push(c);
+            }
+
+            content_str.pop();
+
+            let mut output_file = File::create(output)?;
+            writeln!(output_file, "{}", content_str)?;
             println!("File '{}' extracted to '{}'", filename, output);
         }
     }
